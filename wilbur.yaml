@@ -698,11 +698,11 @@ lvgl:
             styles: st_clear
             scrollable: false
             widgets:
-              - obj: {x: 60, y: 50, width: 40, height: 40, radius: 22, bg_color: 0xFFFFFF, styles: st_shape}
-              - obj: {x: 56, y: 49, width: 47, height: 16, radius: 4, bg_color: 0x000000, styles: st_shape}
-              - obj: {x: 210, y: 53, width: 40, height: 40, radius: 22, bg_color: 0xFFFFFF, styles: st_shape}
-              - obj: {x: 206, y: 50, width: 47, height: 16, radius: 4, bg_color: 0x000000, styles: st_shape}
+              - obj: {x: 61, y: 51, width: 40, height: 40, radius: 22, bg_color: 0xFFFFFF, styles: st_shape}
+              - obj: {x: 211, y: 50, width: 40, height: 40, radius: 22, bg_color: 0xFFFFFF, styles: st_shape}
               - obj: {x: 140, y: 130, width: 40, height: 2, radius: 8, bg_color: 0xFFFFFF, styles: st_shape}
+              - line: {x: 0, y: 0, points: ["195, 72", "213, 40", "250, 40", "195, 72"], line_width: 18, line_color: 0x000000, line_rounded: true}
+              - line: {x: 0, y: 0, points: ["121, 73", "103, 41", "66, 41", "121, 73"], line_width: 18, line_color: 0x000000, line_rounded: true}
         - obj:
             id: mood_sleepy
             hidden: true
