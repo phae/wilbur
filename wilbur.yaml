@@ -176,6 +176,20 @@ switch:
     turn_off_action:
       - script.execute: focus_stop
 
+number:
+  - platform: template
+    name: "Focus duration"
+    id: focus_minutes
+    icon: mdi:timer-outline
+    unit_of_measurement: "min"
+    min_value: 1
+    max_value: 120
+    step: 1
+    initial_value: 25
+    restore_value: true
+    optimistic: true
+    mode: box
+    
 button:
   - platform: template
     name: "Cheer up"
@@ -452,7 +466,7 @@ script:
     then:
       - globals.set:
           id: focus_remaining
-          value: '1500'
+          value: !lambda 'return (int) (id(focus_minutes).state * 60);'
       - globals.set:
           id: focus_running
           value: 'true'
