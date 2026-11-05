@@ -656,9 +656,9 @@ lvgl:
             styles: st_clear
             scrollable: false
             widgets:
-              - obj: {x: 67, y: 50, width: 39, height: 38, radius: 22, bg_color: 0xFFFFFF, styles: st_shape}
+              - obj: {x: 60, y: 50, width: 39, height: 39, radius: 22, bg_color: 0xFFFFFF, styles: st_shape}
               - obj: {x: 140, y: 130, width: 40, height: 6, radius: 3, bg_color: 0xFFFFFF, styles: st_shape}
-              - obj: {x: 210, y: 50, width: 39, height: 38, radius: 22, bg_color: 0xFFFFFF, styles: st_shape}
+              - obj: {x: 210, y: 50, width: 39, height: 39, radius: 22, bg_color: 0xFFFFFF, styles: st_shape}
         - obj:
             id: mood_blink
             hidden: true
