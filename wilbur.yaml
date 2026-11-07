@@ -191,6 +191,44 @@ switch:
           id: set_chill
           enable: false
 
+sensor:
+  - platform: adc
+    pin: GPIO9
+    id: battery_voltage
+    internal: true
+    attenuation: 12db
+    update_interval: 60s
+    accuracy_decimals: 2
+    filters:
+      - multiply: 2.0
+      - sliding_window_moving_average:
+          window_size: 5
+          send_every: 1
+  - platform: copy
+    source_id: battery_voltage
+    id: battery_percent
+    name: "Battery"
+    device_class: battery
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    filters:
+      - calibrate_linear:
+          - 3.27 -> 0.0
+          - 3.61 -> 5.0
+          - 3.69 -> 10.0
+          - 3.73 -> 20.0
+          - 3.77 -> 30.0
+          - 3.80 -> 40.0
+          - 3.84 -> 50.0
+          - 3.87 -> 60.0
+          - 3.95 -> 70.0
+          - 4.02 -> 80.0
+          - 4.11 -> 90.0
+          - 4.20 -> 100.0
+      - clamp:
+          min_value: 0
+          max_value: 100
+          
 number:
   - platform: template
     name: "Focus duration"
