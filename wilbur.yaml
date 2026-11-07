@@ -153,8 +153,6 @@ touchscreen:
       y_min: 0
       y_max: 319
     on_touch:
-      - lambda: |-
-          ESP_LOGI("touch", "x=%d y=%d  raw: x_raw=%d y_raw=%d", touch.x, touch.y, touch.x_raw, touch.y_raw);
       - script.execute: wake
 
 text_sensor:
@@ -228,7 +226,7 @@ sensor:
       - clamp:
           min_value: 0
           max_value: 100
-          
+
 number:
   - platform: template
     name: "Focus duration"
@@ -271,7 +269,6 @@ script:
             - lambda: |-
                 std::string raw;
                 serializeJson(response, raw);
-                ESP_LOGI("tasks", "todo.get_items reply: %s", raw.c_str());
                 std::vector<std::string> names;
                 std::vector<std::string> uids;
                 auto add_items = [&](JsonVariantConst items) {
@@ -316,7 +313,7 @@ script:
           if (n == 0) lv_obj_remove_flag(id(task_empty), LV_OBJ_FLAG_HIDDEN);
           else lv_obj_add_flag(id(task_empty), LV_OBJ_FLAG_HIDDEN);
 
-          std::string btn = "Tasks";
+          std::string btn = "\uF00B";
           lv_label_set_text(id(tasks_btn_label), btn.c_str());
 
           std::string hint = n > slots
@@ -480,7 +477,7 @@ script:
           state: ON
       - lvgl.label.update:
           id: focus_btn_label
-          text: "Stop"
+          text: "\uF04D"
       - script.execute: wake
       - script.execute: set_base_mood
       - while:
@@ -502,7 +499,7 @@ script:
           state: OFF
       - lvgl.label.update:
           id: focus_btn_label
-          text: "Focus"
+          text: "\uF04B"
       - lvgl.label.update:
           id: status_label
           text: "Done!"
@@ -744,12 +741,13 @@ lvgl:
             text: ""
             text_align: CENTER
             text_color: 0xAAAAAA
+
         - button:
             id: focus_btn
             x: 10
-            y: 196
-            width: 100
-            height: 40
+            y: 194
+            width: 36
+            height: 36
             radius: 12
             bg_color: 0x28A060
             shadow_width: 0
@@ -765,16 +763,16 @@ lvgl:
               - label:
                   id: focus_btn_label
                   align: CENTER
-                  text: "Focus"
+                  text: "\uF06E"
                   text_color: 0xFFFFFF
         - button:
             id: chill_btn
-            x: 132
-            y: 196
-            width: 84
-            height: 40
+            x: 57
+            y: 194
+            width: 36
+            height: 36
             radius: 12
-            bg_color: 0x2A3A55
+            bg_color: 0xB332A8
             shadow_width: 0
             on_click:
               - script.execute:
@@ -782,9 +780,29 @@ lvgl:
                   enable: !lambda 'return !id(chill_on);'
             widgets:
               - label:
+                  id: chill_btn_label
                   align: CENTER
-                  text: "Chill"
+                  text: "\uF04B"
                   text_color: 0xFFFFFF
+
+        - button:
+            id: tasks_btn
+            x: 106
+            y: 194
+            width: 36
+            height: 36
+            radius: 12
+            bg_color: 0x5F9CEC
+            shadow_width: 0
+            on_click:
+              - script.execute: show_tasks
+            widgets:
+              - label:
+                  id: tasks_btn_label
+                  align: CENTER
+                  text: "\uF00B"
+                  text_color: 0xFFFFFF
+
         - button:
             id: face_tap
             x: 0
@@ -794,23 +812,6 @@ lvgl:
             styles: st_clear
             on_click:
               - script.execute: cheer
-        - button:
-            id: tasks_btn
-            x: 222
-            y: 196
-            width: 88
-            height: 40
-            radius: 12
-            bg_color: 0x2A3A55
-            shadow_width: 0
-            on_click:
-              - script.execute: show_tasks
-            widgets:
-              - label:
-                  id: tasks_btn_label
-                  align: CENTER
-                  text: "Tasks"
-                  text_color: 0xFFFFFF
 
     - id: tasks_page
       bg_color: 0x000000
