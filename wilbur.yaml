@@ -263,7 +263,7 @@ script:
           if (n == 0) lv_obj_remove_flag(id(task_empty), LV_OBJ_FLAG_HIDDEN);
           else lv_obj_add_flag(id(task_empty), LV_OBJ_FLAG_HIDDEN);
 
-          std::string btn = n == 0 ? "Tasks" : "Tasks " + std::to_string(n);
+          std::string btn = "Tasks";
           lv_label_set_text(id(tasks_btn_label), btn.c_str());
 
           std::string hint = n > slots
