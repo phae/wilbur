@@ -78,6 +78,9 @@ light:
     restore_mode: ALWAYS_ON
 
 globals:
+  - id: chill_on
+    type: bool
+    initial_value: 'false'
   - id: q_title
     type: std::vector<std::string>
     initial_value: 'std::vector<std::string>()'
@@ -175,6 +178,18 @@ switch:
       - script.execute: focus_timer
     turn_off_action:
       - script.execute: focus_stop
+  - platform: template
+    name: "Chill"
+    id: chill_switch
+    restore_mode: DISABLED
+    turn_on_action:
+      - script.execute:
+          id: set_chill
+          enable: true
+    turn_off_action:
+      - script.execute:
+          id: set_chill
+          enable: false
 
 number:
   - platform: template
@@ -192,7 +207,7 @@ number:
 
 button:
   - platform: template
-    name: "Cheer up"
+    name: "Wake"
     on_press:
       - script.execute: cheer
 
@@ -305,6 +320,21 @@ script:
           value: 'true'
       - lvgl.page.show: tasks_page
 
+  - id: set_chill
+    parameters:
+      enable: bool
+    then:
+      - globals.set:
+          id: chill_on
+          value: !lambda 'return enable;'
+      - switch.template.publish:
+          id: chill_switch
+          state: !lambda 'return enable;'
+      - lvgl.widget.update:
+          id: chill_btn
+          bg_color: !lambda 'return enable ? lv_color_hex(0x2F8FB8) : lv_color_hex(0x2A3A55);'
+      - script.execute: set_base_mood
+
   - id: apply_mood
     parameters:
       m: int
@@ -313,39 +343,22 @@ script:
           id: mood
           value: !lambda 'return m;'
       - lambda: |-
-          const char *names[] = {"idle", "happy", "focused", "sleepy"};
-          std::string s = names[(m >= 0 && m <= 3) ? m : 0];
+          const char *names[] = {"idle", "happy", "focused", "sleepy", "chill"};
+          std::string s = names[(m >= 0 && m <= 4) ? m : 0];
           if (id(mood_text).state != s) id(mood_text).publish_state(s);
-      - lvgl.widget.hide: mood_idle
-      - lvgl.widget.hide: mood_blink
-      - lvgl.widget.hide: mood_happy
-      - lvgl.widget.hide: mood_focus
-      - lvgl.widget.hide: mood_sleepy
-      - if:
-          condition:
-            lambda: 'return m == 1;'
-          then:
-            - lvgl.widget.show: mood_happy
-          else:
-            - if:
-                condition:
-                  lambda: 'return m == 2;'
-                then:
-                  - lvgl.widget.show: mood_focus
-                else:
-                  - if:
-                      condition:
-                        lambda: 'return m == 3;'
-                      then:
-                        - lvgl.widget.show: mood_sleepy
-                      else:
-                        - lvgl.widget.show: mood_idle
+          // 0 idle, 1 happy, 2 focused, 3 sleepy, 4 chill: show the matching face, hide the rest
+          lv_obj_t *faces[] = {id(mood_idle), id(mood_happy), id(mood_focus), id(mood_sleepy), id(mood_chill)};
+          lv_obj_add_flag(id(mood_blink), LV_OBJ_FLAG_HIDDEN);
+          for (int i = 0; i < 5; i++) {
+            if (i == m) lv_obj_remove_flag(faces[i], LV_OBJ_FLAG_HIDDEN);
+            else lv_obj_add_flag(faces[i], LV_OBJ_FLAG_HIDDEN);
+          }
 
   - id: set_base_mood
     then:
       - script.execute:
           id: apply_mood
-          m: !lambda 'return id(focus_running) ? 2 : (id(asleep) ? 3 : 0);'
+          m: !lambda 'return id(focus_running) ? 2 : (id(asleep) ? 3 : (id(chill_on) ? 4 : 0));'
 
   - id: cheer
     mode: restart
@@ -671,6 +684,20 @@ lvgl:
               - obj: {x: 197, y: 70, width: 56, height: 8, radius: 4, bg_color: 0x7890C8, styles: st_shape}
               - obj: {x: 153, y: 125, width: 14, height: 14, radius: 7, bg_color: 0x7890C8, styles: st_shape}
               - label: {text: "Zzz", x: 250, y: 20, text_color: 0x7890C8, text_font: montserrat_32}
+        - obj:
+            id: mood_chill
+            hidden: true
+            x: 0
+            y: 0
+            width: 320
+            height: 170
+            styles: st_clear
+            scrollable: false
+            widgets:
+              - obj: {x: 60, y: 62, width: 66, height: 18, radius: 9, bg_color: 0x5CC8FF, styles: st_shape}
+              - obj: {x: 197, y: 70, width: 56, height: 8, radius: 4, bg_color: 0x7890C8, styles: st_shape}
+              - obj: {x: 153, y: 125, width: 14, height: 14, radius: 7, bg_color: 0x7890C8, styles: st_shape}
+              - label: {text: "games", x: 250, y: 20, text_color: 0x7890C8, text_font: montserrat_32}
         - label:
             id: status_label
             x: 0
@@ -703,6 +730,24 @@ lvgl:
                   text: "Focus"
                   text_color: 0xFFFFFF
         - button:
+            id: chill_btn
+            x: 132
+            y: 196
+            width: 84
+            height: 40
+            radius: 12
+            bg_color: 0x2A3A55
+            shadow_width: 0
+            on_click:
+              - script.execute:
+                  id: set_chill
+                  enable: !lambda 'return !id(chill_on);'
+            widgets:
+              - label:
+                  align: CENTER
+                  text: "Chill"
+                  text_color: 0xFFFFFF
+        - button:
             id: face_tap
             x: 0
             y: 0
@@ -713,9 +758,9 @@ lvgl:
               - script.execute: cheer
         - button:
             id: tasks_btn
-            x: 210
+            x: 222
             y: 196
-            width: 100
+            width: 88
             height: 40
             radius: 12
             bg_color: 0x2A3A55
