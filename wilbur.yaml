@@ -245,77 +245,31 @@ script:
 
   - id: render_tasks
     then:
-      - lvgl.label.update:
-          id: tasks_btn_label
-          text: !lambda |-
-            if (id(task_names).empty()) return std::string("Tasks");
-            return "Tasks " + std::to_string(id(task_names).size());
-      - lvgl.label.update:
-          id: task_hint
-          text: !lambda |-
-            if (id(task_names).size() > 5)
-              return "+" + std::to_string(id(task_names).size() - 5) + " more - tap the check to complete";
-            return std::string("Tap the check to complete a task");
-      - if:
-          condition:
-            lambda: 'return id(task_names).empty();'
-          then:
-            - lvgl.label.update:
-                id: task_empty
-                text: "All done!"
-            - lvgl.widget.show: task_empty
-          else:
-            - lvgl.widget.hide: task_empty
-      - if:
-          condition:
-            lambda: 'return id(task_names).size() >= 1;'
-          then:
-            - lvgl.label.update:
-                id: task_lbl_1
-                text: !lambda 'return id(task_names)[0];'
-            - lvgl.widget.show: task_row_1
-          else:
-            - lvgl.widget.hide: task_row_1
-      - if:
-          condition:
-            lambda: 'return id(task_names).size() >= 2;'
-          then:
-            - lvgl.label.update:
-                id: task_lbl_2
-                text: !lambda 'return id(task_names)[1];'
-            - lvgl.widget.show: task_row_2
-          else:
-            - lvgl.widget.hide: task_row_2
-      - if:
-          condition:
-            lambda: 'return id(task_names).size() >= 3;'
-          then:
-            - lvgl.label.update:
-                id: task_lbl_3
-                text: !lambda 'return id(task_names)[2];'
-            - lvgl.widget.show: task_row_3
-          else:
-            - lvgl.widget.hide: task_row_3
-      - if:
-          condition:
-            lambda: 'return id(task_names).size() >= 4;'
-          then:
-            - lvgl.label.update:
-                id: task_lbl_4
-                text: !lambda 'return id(task_names)[3];'
-            - lvgl.widget.show: task_row_4
-          else:
-            - lvgl.widget.hide: task_row_4
-      - if:
-          condition:
-            lambda: 'return id(task_names).size() >= 5;'
-          then:
-            - lvgl.label.update:
-                id: task_lbl_5
-                text: !lambda 'return id(task_names)[4];'
-            - lvgl.widget.show: task_row_5
-          else:
-            - lvgl.widget.hide: task_row_5
+      - lambda: |-
+          lv_obj_t *rows[] = {id(task_row_1), id(task_row_2), id(task_row_3), id(task_row_4), id(task_row_5)};
+          lv_obj_t *lbls[] = {id(task_lbl_1), id(task_lbl_2), id(task_lbl_3), id(task_lbl_4), id(task_lbl_5)};
+          const size_t slots = sizeof(rows) / sizeof(rows[0]);
+          const size_t n = id(task_names).size();
+
+          for (size_t i = 0; i < slots; i++) {
+            if (i < n) {
+              lv_label_set_text(lbls[i], id(task_names)[i].c_str());
+              lv_obj_remove_flag(rows[i], LV_OBJ_FLAG_HIDDEN);
+            } else {
+              lv_obj_add_flag(rows[i], LV_OBJ_FLAG_HIDDEN);
+            }
+          }
+
+          if (n == 0) lv_obj_remove_flag(id(task_empty), LV_OBJ_FLAG_HIDDEN);
+          else lv_obj_add_flag(id(task_empty), LV_OBJ_FLAG_HIDDEN);
+
+          std::string btn = n == 0 ? "Tasks" : "Tasks " + std::to_string(n);
+          lv_label_set_text(id(tasks_btn_label), btn.c_str());
+
+          std::string hint = n > slots
+              ? "+" + std::to_string(n - slots) + " more - tap the check to complete"
+              : "Tap the check to complete a task";
+          lv_label_set_text(id(task_hint), hint.c_str());
 
   - id: complete_task
     parameters:
