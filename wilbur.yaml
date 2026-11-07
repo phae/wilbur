@@ -75,7 +75,14 @@ light:
     output: backlight_pwm
     name: "Backlight"
     id: backlight
-    restore_mode: ALWAYS_ON
+    restore_mode: RESTORE_DEFAULT_ON
+    default_transition_length: 0s
+    on_state:
+      - lambda: |-
+          // remember the brightness set from HA, but not the dimmed sleep level
+          if (!id(asleep) && id(backlight).remote_values.is_on()) {
+            id(user_brightness) = id(backlight).remote_values.get_brightness();
+          }
 
 globals:
   - id: chill_on
@@ -129,6 +136,10 @@ globals:
   - id: focus_remaining
     type: int
     initial_value: '0'
+  - id: user_brightness
+    type: float
+    restore_value: true
+    initial_value: '1.0'
 
 display:
   - platform: mipi_spi
@@ -248,7 +259,7 @@ button:
       - script.execute: cheer
 
 interval:
-  - interval: 3500ms
+  - interval: 5500ms
     then:
       - script.execute: blink
   - interval: 5min
@@ -443,7 +454,7 @@ script:
                   - lvgl.page.show: face_page
             - light.turn_on:
                 id: backlight
-                brightness: 15%
+                brightness: !lambda 'return std::min(0.15f, id(user_brightness));'
 
   - id: wake
     then:
@@ -459,7 +470,7 @@ script:
                 state: false
             - light.turn_on:
                 id: backlight
-                brightness: 100%
+                brightness: !lambda 'return std::min(0.15f, id(user_brightness));'
             - script.execute: set_base_mood
       - script.execute: inactivity
 
@@ -658,9 +669,14 @@ lvgl:
             styles: st_clear
             scrollable: false
             widgets:
-              - obj: {x: 60, y: 50, width: 40, height: 40, radius: 22, bg_color: 0xFFFFFF, styles: st_shape}
-              - obj: {x: 140, y: 130, width: 40, height: 6, radius: 3, bg_color: 0xFFFFFF, styles: st_shape}
-              - obj: {x: 210, y: 50, width: 40, height: 40, radius: 22, bg_color: 0xFFFFFF, styles: st_shape}
+              - obj: {x: 221, y: 23, width: 40, height: 40, radius: 22, bg_color: 0xFFFFFF, styles: st_shape}
+              - obj: {x: 132, y: 128, width: 54, height: 29, radius: 21, bg_color: 0xFFFFFF, transform_rotation: 1, transform_pivot_x: 27, transform_pivot_y: 15, styles: st_shape}
+              - obj: {x: 220, y: 31, width: 40, height: 38, radius: 22, bg_color: 0x000000, styles: st_shape}
+              - obj: {x: 60, y: 23, width: 39, height: 40, radius: 22, bg_color: 0xFFFFFF, styles: st_shape}
+              - obj: {x: 60, y: 31, width: 40, height: 38, radius: 22, bg_color: 0x000000, styles: st_shape}
+              - obj: {x: 59, y: 47, width: 42, height: 78, radius: 22, bg_color: 0xFFFFFF, styles: st_shape}
+              - obj: {x: 219, y: 47, width: 42, height: 78, radius: 22, bg_color: 0xFFFFFF, styles: st_shape}
+              - obj: {x: 126, y: 125, width: 64, height: 16, radius: 8, bg_color: 0x000000, styles: st_shape}
         - obj:
             id: mood_blink
             hidden: true
@@ -671,9 +687,14 @@ lvgl:
             styles: st_clear
             scrollable: false
             widgets:
-              - obj: {x: 67, y: 66, width: 56, height: 8, radius: 4, bg_color: 0xFFFFFF, styles: st_shape}
-              - obj: {x: 197, y: 66, width: 56, height: 8, radius: 4, bg_color: 0xFFFFFF, styles: st_shape}
-              - obj: {x: 140, y: 130, width: 40, height: 6, radius: 3, bg_color: 0xFFFFFF, styles: st_shape}
+              - obj: {x: 221, y: 23, width: 40, height: 40, radius: 22, bg_color: 0xFFFFFF, styles: st_shape}
+              - obj: {x: 220, y: 31, width: 40, height: 38, radius: 22, bg_color: 0x000000, styles: st_shape}
+              - obj: {x: 60, y: 23, width: 39, height: 40, radius: 22, bg_color: 0xFFFFFF, styles: st_shape}
+              - obj: {x: 60, y: 31, width: 40, height: 38, radius: 22, bg_color: 0x000000, styles: st_shape}
+              - obj: {x: 56, y: 87, width: 48, height: 8, radius: 22, bg_color: 0xFFFFFF, styles: st_shape}
+              - obj: {x: 216, y: 87, width: 48, height: 8, radius: 22, bg_color: 0xFFFFFF, styles: st_shape}
+              - obj: {x: 132, y: 128, width: 54, height: 29, radius: 21, bg_color: 0xFFFFFF, transform_rotation: 1, transform_pivot_x: 27, transform_pivot_y: 15, styles: st_shape}
+              - obj: {x: 126, y: 125, width: 64, height: 16, radius: 8, bg_color: 0x000000, styles: st_shape}
         - obj:
             id: mood_happy
             hidden: true
@@ -684,12 +705,15 @@ lvgl:
             styles: st_clear
             scrollable: false
             widgets:
-              - obj: {x: 60, y: 50, width: 40, height: 40, radius: 22, bg_color: 0xFFFFFF, styles: st_shape}
-              - obj: {x: 210, y: 50, width: 40, height: 40, radius: 22, bg_color: 0xFFFFFF, styles: st_shape}
-              - obj: {x: 136, y: 112, width: 40, height: 40, radius: 22, bg_color: 0xFFFFFF, styles: st_shape}
-              - obj: {x: 276, y: 34, width: 11, height: 80, radius: 8, bg_color: 0xFFFFFF, styles: st_shape}
-              - obj: {x: 275, y: 124, width: 12, height: 12, radius: 22, bg_color: 0xFFFFFF, styles: st_shape}
-              - obj: {x: 132, y: 106, width: 47, height: 23, radius: 0, bg_color: 0x000000, styles: st_shape}
+              - obj: {x: 221, y: 23, width: 40, height: 40, radius: 22, bg_color: 0xFFFFFF, styles: st_shape}
+              - obj: {x: 144, y: 106, width: 34, height: 49, radius: 21, bg_color: 0xFFFFFF, styles: st_shape}
+              - obj: {x: 220, y: 31, width: 40, height: 38, radius: 22, bg_color: 0x000000, styles: st_shape}
+              - obj: {x: 60, y: 23, width: 39, height: 40, radius: 22, bg_color: 0xFFFFFF, styles: st_shape}
+              - obj: {x: 60, y: 31, width: 40, height: 38, radius: 22, bg_color: 0x000000, styles: st_shape}
+              - line: {x: 0, y: 0, points: ["219, 89", "253, 78"], line_width: 6, line_color: 0xFFFFFF, line_rounded: true}
+              - line: {x: 0, y: 0, points: ["219, 91", "261, 114"], line_width: 6, line_color: 0xFFFFFF, line_rounded: true}
+              - line: {x: 0, y: 0, points: ["101, 89", "67, 78"], line_width: 6, line_color: 0xFFFFFF, line_rounded: true}
+              - line: {x: 0, y: 0, points: ["101, 91", "59, 114"], line_width: 6, line_color: 0xFFFFFF, line_rounded: true}
         - obj:
             id: mood_focus
             hidden: true
@@ -700,11 +724,14 @@ lvgl:
             styles: st_clear
             scrollable: false
             widgets:
-              - obj: {x: 61, y: 51, width: 40, height: 40, radius: 22, bg_color: 0xFFFFFF, styles: st_shape}
-              - obj: {x: 211, y: 50, width: 40, height: 40, radius: 22, bg_color: 0xFFFFFF, styles: st_shape}
-              - obj: {x: 140, y: 130, width: 40, height: 2, radius: 8, bg_color: 0xFFFFFF, styles: st_shape}
-              - line: {x: 0, y: 0, points: ["195, 72", "213, 40", "250, 40", "195, 72"], line_width: 18, line_color: 0x000000, line_rounded: true}
-              - line: {x: 0, y: 0, points: ["121, 73", "103, 41", "66, 41", "121, 73"], line_width: 18, line_color: 0x000000, line_rounded: true}
+              - obj: {x: 132, y: 128, width: 54, height: 29, radius: 21, bg_color: 0xFFFFFF, transform_rotation: 168, transform_pivot_x: 27, transform_pivot_y: 15, styles: st_shape}
+              - obj: {x: 59, y: 47, width: 42, height: 78, radius: 22, bg_color: 0xFFFFFF, styles: st_shape}
+              - obj: {x: 219, y: 47, width: 42, height: 78, radius: 22, bg_color: 0xFFFFFF, styles: st_shape}
+              - obj: {x: 126, y: 125, width: 64, height: 16, radius: 8, bg_color: 0x000000, styles: st_shape}
+              - obj: {x: 204, y: 40, width: 60, height: 31, radius: 8, bg_color: 0x000000, transform_rotation: 150, transform_pivot_x: 30, transform_pivot_y: 16, styles: st_shape}
+              - obj: {x: 56, y: 40, width: 60, height: 31, radius: 8, bg_color: 0x000000, transform_rotation: 210, transform_pivot_x: 30, transform_pivot_y: 16, styles: st_shape}
+              - obj: {x: 65, y: 35, width: 36, height: 8, radius: 8, bg_color: 0xFFFFFF, transform_rotation: 14, transform_pivot_x: 18, transform_pivot_y: 4, styles: st_shape}
+              - obj: {x: 219, y: 35, width: 36, height: 8, radius: 8, bg_color: 0xFFFFFF, transform_rotation: 346, transform_pivot_x: 18, transform_pivot_y: 4, styles: st_shape}
         - obj:
             id: mood_sleepy
             hidden: true
@@ -715,10 +742,12 @@ lvgl:
             styles: st_clear
             scrollable: false
             widgets:
-              - obj: {x: 67, y: 70, width: 56, height: 8, radius: 4, bg_color: 0x7890C8, styles: st_shape}
-              - obj: {x: 197, y: 70, width: 56, height: 8, radius: 4, bg_color: 0x7890C8, styles: st_shape}
-              - obj: {x: 153, y: 125, width: 14, height: 14, radius: 7, bg_color: 0x7890C8, styles: st_shape}
-              - label: {text: "Zzz", x: 250, y: 20, text_color: 0x7890C8, text_font: montserrat_32}
+              - label: {text: "Z z z ...", x: 43, y: 105, text_color: 0xFFFFFF, text_font: montserrat_32}
+              - obj: {x: 152, y: 117, width: 20, height: 20, radius: 21, bg_color: 0xFFFFFF, styles: st_shape}
+              - obj: {x: 216, y: 87, width: 48, height: 8, radius: 22, bg_color: 0xFFFFFF, styles: st_shape}
+              - obj: {x: 56, y: 87, width: 48, height: 8, radius: 22, bg_color: 0xFFFFFF, styles: st_shape}
+              - obj: {x: 224, y: 64, width: 36, height: 8, radius: 8, bg_color: 0xFFFFFF, transform_rotation: 14, transform_pivot_x: 18, transform_pivot_y: 4, styles: st_shape}
+              - obj: {x: 60, y: 64, width: 36, height: 8, radius: 8, bg_color: 0xFFFFFF, transform_rotation: 346, transform_pivot_x: 18, transform_pivot_y: 4, styles: st_shape}
         - obj:
             id: mood_chill
             hidden: true
@@ -729,10 +758,14 @@ lvgl:
             styles: st_clear
             scrollable: false
             widgets:
-              - obj: {x: 60, y: 62, width: 66, height: 18, radius: 9, bg_color: 0x5CC8FF, styles: st_shape}
-              - obj: {x: 197, y: 70, width: 56, height: 8, radius: 4, bg_color: 0x7890C8, styles: st_shape}
-              - obj: {x: 153, y: 125, width: 14, height: 14, radius: 7, bg_color: 0x7890C8, styles: st_shape}
-              - label: {text: "games", x: 250, y: 20, text_color: 0x7890C8, text_font: montserrat_32}
+              - obj: {x: 221, y: 23, width: 40, height: 40, radius: 22, bg_color: 0xFFFFFF, styles: st_shape}
+              - obj: {x: 132, y: 128, width: 54, height: 29, radius: 21, bg_color: 0xFFFFFF, transform_rotation: 10, transform_pivot_x: 27, transform_pivot_y: 15, styles: st_shape}
+              - obj: {x: 220, y: 31, width: 40, height: 38, radius: 22, bg_color: 0x000000, styles: st_shape}
+              - obj: {x: 60, y: 23, width: 39, height: 40, radius: 22, bg_color: 0xFFFFFF, styles: st_shape}
+              - obj: {x: 60, y: 31, width: 40, height: 38, radius: 22, bg_color: 0x000000, styles: st_shape}
+              - obj: {x: 59, y: 47, width: 42, height: 78, radius: 22, bg_color: 0xFFFFFF, styles: st_shape}
+              - obj: {x: 219, y: 47, width: 42, height: 78, radius: 22, bg_color: 0xFFFFFF, styles: st_shape}
+              - obj: {x: 126, y: 125, width: 64, height: 16, radius: 8, bg_color: 0x000000, styles: st_shape}
         - label:
             id: status_label
             x: 0
@@ -744,7 +777,7 @@ lvgl:
 
         - button:
             id: focus_btn
-            x: 10
+            x: 89
             y: 194
             width: 36
             height: 36
@@ -767,7 +800,7 @@ lvgl:
                   text_color: 0xFFFFFF
         - button:
             id: chill_btn
-            x: 57
+            x: 143
             y: 194
             width: 36
             height: 36
@@ -784,10 +817,9 @@ lvgl:
                   align: CENTER
                   text: "\uF04B"
                   text_color: 0xFFFFFF
-
         - button:
             id: tasks_btn
-            x: 106
+            x: 197
             y: 194
             width: 36
             height: 36
@@ -802,7 +834,6 @@ lvgl:
                   align: CENTER
                   text: "\uF00B"
                   text_color: 0xFFFFFF
-
         - button:
             id: face_tap
             x: 0
